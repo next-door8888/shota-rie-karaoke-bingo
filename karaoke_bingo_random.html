@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>🎤 カラオケBINGO</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;background:linear-gradient(135deg,#16002d,#001b3d,#310019);color:#fff;min-height:100vh}
+.app{max-width:720px;margin:auto;padding:6px 8px 14px}.screen{display:none}.screen.active{display:block}.hero{text-align:center;padding:5px 3px 3px}.hero h1{margin:0;font-size:clamp(22px,6.2vw,38px);font-weight:1000;line-height:1.02;text-shadow:0 0 18px #ff4fc3}.hero p{margin:2px;color:#d8d8ff;font-size:12px}
+.panel{background:rgba(10,8,35,.82);border:2px solid rgba(255,255,255,.17);border-radius:18px;padding:10px;margin:6px 0;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+h2{font-size:20px;margin:0 0 12px}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.choice{min-height:58px;border-radius:14px;border:2px solid #62578f;background:#201a45;color:#fff;font-weight:900;font-size:17px}.choice.selected{background:linear-gradient(135deg,#ff3fa9,#ff9e3d);border-color:#fff}
+.dups{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dup{min-height:54px;border-radius:14px;border:2px solid #62578f;background:#201a45;color:#fff;font-weight:900}.dup.selected{background:linear-gradient(135deg,#7a4dff,#39bde8);border-color:#fff}
+.bigbtn{width:100%;min-height:54px;border:0;border-radius:15px;background:linear-gradient(90deg,#ff39a8,#ff9c3d);color:#fff;font-weight:1000;font-size:18px;margin-top:12px}.back{background:#282344;border:1px solid #777;color:#fff;margin-top:8px}
+.field input{width:100%;padding:13px;border-radius:12px;border:1px solid #777;background:#fff;color:#111;font-size:20px;text-align:center}
+#score{
+  min-width:0;
+  width:100%;
+  max-width:270px;
+  height:64px;
+  min-height:64px;
+  padding:8px 12px;
+  border:4px solid #c7b7ff;
+  border-radius:18px;
+  background:#ffffff;
+  color:#111111 !important;
+  -webkit-text-fill-color:#111111;
+  font-size:40px;
+  font-weight:1000;
+  text-align:center;
+  outline:none;
+  display:block;
+  margin:0 auto;
+}
+.randomRange input{width:100%;min-width:0;padding:10px;border-radius:11px;border:2px solid #8f80c8;background:#fff;color:#111;font-size:20px;text-align:center;font-weight:900}
+.randomRange input:focus{outline:none;border-color:#ff4fa3}
+#score:focus{border-color:#ff4fa3;box-shadow:0 0 0 3px rgba(255,79,163,.2)}
+#score::placeholder{
+  font-size:20px;
+  color:#b7b7b7 !important;
+  -webkit-text-fill-color:#b7b7b7;
+  opacity:1;
+  font-weight:700;
+}
+#score:not(:placeholder-shown){color:#111111 !important;-webkit-text-fill-color:#111111;}
+.scoreInput{display:flex;flex-direction:column;align-items:center;gap:9px}
+.scoreInput .judge{width:140px;height:46px;min-height:46px;flex:none;margin:0;padding:7px 12px;font-size:19px}
+
+.card{
+display:grid;gap:5px;padding:7px;border-radius:21px;
+background:radial-gradient(circle at 8% 8%,#ffd43b66 0 3%,transparent 4%),
+radial-gradient(circle at 92% 12%,#ff4fa366 0 4%,transparent 5%),
+radial-gradient(circle at 10% 90%,#4bc9ff66 0 4%,transparent 5%),
+radial-gradient(circle at 90% 90%,#9b5cff66 0 4%,transparent 5%),
+linear-gradient(135deg,#3a0f72,#10183f 48%,#650d49);
+border:4px solid #ff65c4;
+box-shadow:0 0 0 4px #ffd43b33,0 0 32px #ff3fa966,inset 0 0 30px #ffffff12;
+position:relative;
+}
+.card:before{
+content:"✦ PARTY ✦ PARTY ✦ PARTY ✦";
+position:absolute;left:8px;right:8px;top:-18px;text-align:center;
+font-size:10px;font-weight:1000;letter-spacing:2px;color:#ffd84a;
+text-shadow:0 0 8px #ff4fa3;pointer-events:none;
+}
+.cell{
+position:relative;aspect-ratio:1;border-radius:15px;
+background:linear-gradient(145deg,#392579,#16143e 52%,#2b124c);
+border:3px solid #a991ff;display:flex;align-items:center;
+justify-content:center;overflow:hidden;
+box-shadow:inset 0 0 18px #ffffff10,0 4px 10px #0009;
+}
+.cell:before{content:"✦";position:absolute;left:6px;top:3px;font-size:15px;color:#ffd84a;text-shadow:0 0 7px #ffd84a}
+.cell:after{content:"◆";position:absolute;right:6px;bottom:3px;font-size:10px;color:#ff69c7;text-shadow:0 0 7px #ff69c7}
+.cell:nth-child(3n+1){border-color:#a991ff}.cell:nth-child(3n+2){border-color:#ff8bcf}.cell:nth-child(3n){border-color:#69d5ff}
+.cell input{
+width:100%;height:100%;border:0;background:transparent;color:#fff;
+text-align:center;font-size:clamp(19px,7vw,40px);font-weight:1000;
+outline:none;text-shadow:0 2px 7px #000;
+}
+.cell.open{
+background:linear-gradient(145deg,#fff06a,#ff9d38 45%,#ff4fa8);
+border-color:#fff9bd!important;
+box-shadow:0 0 14px #ffd33d,0 0 28px #ff4fa899,inset 0 0 18px #fff9;
+}
+.cell.open input{color:#241000;text-shadow:none}
+.cell.open:after{content:"🎉";position:absolute;right:3px;top:0;font-size:16px}
+.cell.hit{animation:pop .55s}.cell.shake{animation:shake .35s}@keyframes pop{50%{transform:scale(1.13) rotate(3deg)}}@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.gameTop{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.scoreInput{display:flex;gap:7px}.scoreInput input{min-width:0;flex:1}.judge{min-width:105px}.score{font-size:clamp(40px,10vw,60px);font-weight:1000;text-align:center;line-height:.95;background:linear-gradient(90deg,#ff55b7,#ffd23f,#58c8ff);-webkit-background-clip:text;color:transparent}.msg{text-align:center;font-size:clamp(16px,4.5vw,23px);font-weight:1000;min-height:32px;padding:4px}.status{text-align:center;padding:7px;border-radius:14px;background:linear-gradient(90deg,#ff41a933,#ffcf3d33,#4abeff33);border:2px solid #ffffff25;font-weight:1000;font-size:18px}.history{display:flex;flex-wrap:wrap;gap:5px}.chip{padding:4px 8px;border-radius:99px;background:#282248;border:1px solid #655a99;font-weight:800;font-size:12px}.chip.hit{background:#5a4010;border-color:#ffc83d}.mini{font-size:12px;color:#bbb6d9}.gameCardTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-weight:900}
+
+.partyFx{
+display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
+overflow:hidden;background:#080014;touch-action:none;
+}
+.partyFx.show{display:flex}
+.partyFx:before{
+content:"";position:absolute;inset:-20%;
+background:
+radial-gradient(circle at 50% 58%,#fff 0 1%,#ff52db 2%,transparent 13%),
+radial-gradient(ellipse at 50% 50%,#5b0caa 0%,#21004c 28%,#090014 70%);
+animation:fxPulse 1.1s ease-in-out infinite alternate;
+}
+.partyFx:after{
+content:"";position:absolute;inset:0;
+background:repeating-conic-gradient(from 0deg at 50% 58%,#ff32d622 0deg 3deg,transparent 3deg 13deg,#5c42ff1d 13deg 22deg);
+animation:fxSpin 5s linear infinite;
+}
+.fxTitle{
+position:relative;z-index:3;text-align:center;white-space:nowrap;
+font-size:clamp(46px,13vw,82px);font-weight:1000;line-height:1.05;
+letter-spacing:.01em;color:#fff;
+-webkit-text-stroke:2px #ff4fa3;
+text-shadow:0 0 5px #fff,0 0 14px #ff4fa3,0 0 30px #ff1ca8,0 0 52px #8c35ff;
+animation:fxZoom .7s cubic-bezier(.2,1.4,.4,1) both;
+}
+.fxSub{
+font-size:clamp(18px,5.5vw,31px);margin-top:18px;letter-spacing:.08em;
+color:#fff;text-shadow:0 0 10px #fff,0 0 22px #ffb52e;
+-webkit-text-stroke:0;
+}
+.fxClose{
+position:absolute;right:18px;top:18px;z-index:2147483647;width:52px;height:52px;pointer-events:auto;cursor:pointer;touch-action:manipulation;border:0;
+border-radius:50%;background:#fff;color:#222;font-size:27px;font-weight:1000;
+box-shadow:0 3px 15px #0008;
+}
+.fxBurst{
+position:absolute;left:50%;top:58%;z-index:2;width:5px;height:5px;border-radius:50%;
+background:#fff;box-shadow:0 0 15px 5px #fff;animation:burst 1.15s ease-out infinite;
+}
+.fxSpot{
+position:absolute;z-index:1;width:30%;height:150%;top:-25%;
+background:linear-gradient(90deg,transparent,#ffffff32 48%,#ffffff1a 52%,transparent);
+filter:blur(2px);transform-origin:50% 50%;animation:spot 1.6s ease-in-out infinite alternate;
+}
+.fxSpot.s1{left:4%;transform:rotate(23deg)}.fxSpot.s2{right:4%;transform:rotate(-23deg);animation-delay:.2s}
+.conf{
+position:absolute;top:-35px;width:12px;height:22px;border-radius:2px;z-index:4;
+animation:fall linear infinite;box-shadow:0 0 8px #fff5;
+}
+@keyframes fxZoom{0%{transform:scale(.45);opacity:0}65%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes fxPulse{from{filter:brightness(.8)}to{filter:brightness(1.35)}}
+@keyframes fxSpin{to{transform:rotate(360deg)}}
+@keyframes spot{from{opacity:.18;transform:rotate(19deg) translateX(-45px)}to{opacity:.62;transform:rotate(27deg) translateX(45px)}}
+@keyframes burst{
+0%{box-shadow:0 0 0 0 #fff,0 0 0 0 #ff4fa3}
+100%{box-shadow:0 -250px 0 5px #ffd43b,175px -175px 5px 5px #ff4fa3,250px 0 5px 5px #4bc9ff,175px 175px 5px 5px #fff,0 250px 5px 5px #ffd43b,-175px 175px 5px 5px #ff4fa3,-250px 0 5px 5px #4bc9ff,-175px -175px 5px 5px #fff;opacity:0}
+}
+@keyframes fall{to{transform:translateY(115vh) rotate(720deg)}}
+.sadDrop{position:absolute;z-index:4;font-size:28px;animation:sadDrop 1.8s ease-in forwards;filter:grayscale(.2);pointer-events:none}
+@keyframes sadDrop{0%{transform:translateY(0) rotate(-10deg);opacity:0}20%{opacity:1}100%{transform:translateY(420px) rotate(12deg);opacity:0}}
+.partyFx.sadMode .conf{display:none!important}
+.partyFx.sadMode:before{
+background:radial-gradient(circle at 50% 58%,#fff 0 1%,#b9c2ff 2%,#52608f 7%,transparent 18%),
+radial-gradient(ellipse at 50% 50%,#28304f 0%,#11152e 35%,#070912 75%);
+}
+.partyFx.sadMode .fxTitle{
+-webkit-text-stroke:2px #9aa7d8;
+text-shadow:0 0 5px #fff,0 0 15px #7180b8,0 0 30px #3e4b7d;
+}
+.partyFx.sadMode .fxSub{color:#e5e9ff;text-shadow:0 0 10px #fff,0 0 20px #6878b8}
+.partyFx.bingoMode:before{
+background:radial-gradient(circle at 50% 58%,#fff 0 1%,#ffd83d 2%,#ff5b9e 7%,transparent 18%),
+radial-gradient(ellipse at 50% 50%,#ff7a18 0%,#b70c70 25%,#26004f 55%,#090014 75%);
+}
+.partyFx.bingoMode .fxTitle{
+-webkit-text-stroke:2px #ffd43b;
+text-shadow:0 0 5px #fff,0 0 15px #ffd43b,0 0 32px #ff6a18,0 0 58px #ff2da1;
+}
+.partyFx.bingoMode .fxSub{color:#fff9cf;text-shadow:0 0 10px #fff,0 0 24px #ff9c20}
+.bingoFlash{display:none;position:fixed;inset:0;background:rgba(20,0,40,.9);z-index:5;align-items:center;justify-content:center;text-align:center;padding:20px}.bingoFlash.show{display:flex}.bingoFlash .text{font-size:clamp(45px,15vw,90px);font-weight:1000;animation:bounce .7s infinite alternate;text-shadow:0 0 25px #ffd23f}.closeFlash{position:absolute;top:18px;right:18px;background:#fff;color:#222;border:0;border-radius:50%;width:44px;height:44px;font-size:22px}@keyframes bounce{to{transform:scale(1.1) rotate(2deg)}}
+@media(max-width:420px){
+.app{padding:4px 6px 10px}
+.panel{padding:8px;margin:5px 0}
+.hero{padding:3px 2px 2px}
+.hero h1{font-size:clamp(21px,6vw,34px);line-height:1.0}
+.hero p{font-size:11px;margin:1px}
+.choices{gap:5px}
+.choice{font-size:15px}
+.gameTop{grid-template-columns:1fr}
+#score{width:100%;max-width:260px;height:62px;min-height:62px;font-size:36px}
+.scoreInput .judge{width:135px;height:44px;min-height:44px;font-size:17px}
+.status{font-size:16px;padding:6px}
+.card{gap:4px;padding:6px}
+.cell{border-radius:14px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<section id="setup" class="screen active">
+<header class="hero"><h1>🎤 将太とりえちゃんの<br>カラオケBINGO大会</h1><p>まずはゲーム設定！</p></header>
+<div class="panel"><h2>① BINGOカードのサイズ</h2><div class="choices"><button class="choice selected" data-size="3">3 × 3</button><button class="choice" data-size="4">4 × 4</button><button class="choice" data-size="5">5 × 5</button></div></div>
+<div class="panel"><h2>② カード内の数字の重複</h2><div class="dups"><button class="dup selected" data-dup="no">重複なし</button><button class="dup" data-dup="yes">重複あり</button></div><div class="mini" style="margin-top:8px">重複あり：同じ点数が複数あれば、未OPENからランダムで1マス。<br>重複なし：同じ点数が再度出たらOPENマスをCLOSEに戻します。</div></div>
+<button id="toCard" class="bigbtn">次へ → カード入力</button>
+</section>
+
+<section id="cardScreen" class="screen">
+<header class="hero"><h1>🎯 カードを作ろう！</h1><p id="cardInfo"></p></header>
+<div class="panel">
+<div id="editCard" class="card"></div>
+<div id="cardError" class="mini" style="color:#ff9b9b;margin-top:7px"></div>
+<div class="randomBox" style="margin-top:10px;padding:10px;border-radius:15px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)">
+<div style="font-weight:900;text-align:center;margin-bottom:7px">🎲 ランダム入力</div>
+<div class="randomRange" style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center">
+<input id="randomMin" type="number" inputmode="numeric" value="88" min="0" max="999" aria-label="最低点">
+<span style="font-weight:1000">～</span>
+<input id="randomMax" type="number" inputmode="numeric" value="97" min="0" max="999" aria-label="最高点">
+</div>
+<button id="randomFill" type="button" class="bigbtn" style="margin-top:8px;min-height:48px;font-size:17px">🎲 この範囲でランダム入力</button>
+<div class="mini" style="text-align:center;margin-top:5px">重複なし：同じ数字は入りません　／　重複あり：同じ数字も入ります</div>
+</div>
+<button id="start" class="bigbtn">🎤 ゲーム開始！</button>
+<button id="backSetup" class="bigbtn back">← 設定に戻る</button>
+</div>
+</section>
+
+<section id="gameScreen" class="screen">
+<header class="hero"><h1>🎤 将太とりえちゃんの<br>カラオケBINGO大会</h1><p>点数を入れて「判定！」</p></header>
+<div class="panel">
+<div style="text-align:center"><div class="score">--</div></div>
+<form id="form" class="scoreInput">
+<input id="score" type="number" min="0" max="999" inputmode="numeric" placeholder="点数">
+<button class="bigbtn judge" type="submit">判定！</button>
+</form>
+<div id="msg" class="msg">🎤 採点結果を入力！</div>
+</div>
+<div id="status" class="status">🔥 BINGOまであと -- マス！</div>
+<div class="panel">
+<div class="gameCardTitle"><span>🎯✨ BINGO PARTY ✨🎉</span><span id="openCount" class="mini" style="display:none"></span></div>
+<div id="gameCard" class="card"></div>
+</div>
+<button id="gameBack" class="bigbtn back" style="margin:9px 0">⚙️ 設定へ戻る</button>
+<div class="panel"><div style="font-weight:900;margin-bottom:6px">📋 採点履歴</div><div id="history" class="history"><span class="mini">まだありません</span></div></div>
+</section>
+</div>
+
+<div id="videoFx" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,0,20,.94);align-items:center;justify-content:center;padding:18px">
+  <div style="position:relative;width:min(92vw,540px);border-radius:24px;overflow:hidden;border:3px solid #ff70c8;box-shadow:0 0 35px #ff4fa399;background:#09051d">
+    <button id="videoClose" type="button" aria-label="演出を閉じる" style="position:absolute;right:10px;top:10px;z-index:2;width:44px;height:44px;border:0;border-radius:50%;background:#fff;color:#222;font-size:25px;font-weight:900">×</button>
+    <video id="fxVideo" playsinline preload="auto" style="display:block;width:100%;height:auto"></video>
+  </div>
+</div>
+
+
+<div id="reachFx" class="partyFx">
+  <button class="fxClose" type="button" onclick="window.closePartyFx('reachFx');return false;">×</button>
+  <div class="fxSpot s1"></div><div class="fxSpot s2"></div><div class="fxBurst"></div>
+  <div class="fxTitle"><span id="reachTitle">🔥 リーチ！！ 🔥</span><div id="reachSub" class="fxSub">あと1マス！！</div></div>
+</div>
+<div id="sadFx" class="partyFx">
+  <button class="fxClose" type="button" onclick="window.closePartyFx('sadFx');return false;">×</button>
+  <div class="fxSpot s1"></div><div class="fxSpot s2"></div><div class="fxBurst"></div>
+  <div class="fxTitle"><span id="sadTitle">😭 ザンネン……</span><div id="sadSub" class="fxSub">でも、まだリーチがある！！</div></div>
+</div>
+<div id="bingoFx" class="partyFx">
+  <button class="fxClose" type="button" onclick="window.closePartyFx('bingoFx');return false;">×</button>
+  <div class="fxSpot s1"></div><div class="fxSpot s2"></div><div class="fxBurst"></div>
+  <div class="fxTitle">🎉 BINGO!! 🎉<div class="fxSub">おめでとう！！</div></div>
+</div>
+<div id="flash" class="bingoFlash"><button id="closeFlash" class="closeFlash">×</button><div class="text">🎉🎉🎉<br>BINGO!!<br>🎉🎉🎉</div></div>
+
+<script>
+(()=>{let n=3,dup='no',cells=[],history=[];const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-size]').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');n=+b.dataset.size});
+document.querySelectorAll('[data-dup]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-dup]').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');dup=b.dataset.dup});
+$('toCard').onclick=()=>{cells=Array.from({length:n*n},()=>({v:'',open:false}));renderEdit();$('cardInfo').textContent=`${n}×${n}・重複${dup==='yes'?'あり':'なし'}`;show('cardScreen')};
+function renderEdit(){const g=$('editCard');g.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;g.innerHTML='';cells.forEach((c,i)=>{const d=document.createElement('div');d.className='cell';const x=document.createElement('input');x.type='number';x.inputMode='numeric';x.placeholder='数字';x.value=c.v;x.oninput=()=>{const v=x.value.trim();if(dup==='no'&&v!==''&&cells.some((z,j)=>j!==i&&z.v===v)){x.value=c.v;$('cardError').textContent='⚠️ 重複なしなので同じ数字は入れられません。';return}c.v=v;$('cardError').textContent=''};d.appendChild(x);g.appendChild(d)})}
+function randomFill(){let min=Number($('randomMin').value),max=Number($('randomMax').value);if(!Number.isInteger(min)||!Number.isInteger(max)||min<0||max>999||min>max){$('cardError').textContent='⚠️ 0～999の範囲で、最低点≦最高点にしてな！';return}const count=n*n;if(dup==='no'&&max-min+1<count){$('cardError').textContent=`⚠️ 重複なしでは${count}個必要です。範囲を広げてな！`;return}let pool=[];for(let v=min;v<=max;v++)pool.push(v);const picked=[];if(dup==='no'){for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}picked.push(...pool.slice(0,count))}else{for(let i=0;i<count;i++)picked.push(min+Math.floor(Math.random()*(max-min+1)))}cells.forEach((c,i)=>{c.v=String(picked[i]);c.open=false});$('cardError').textContent=`🎲 ${min}～${max}からランダム入力しました！`;renderEdit()}
+$('backSetup').onclick=()=>show('setup');
+$('randomFill').onclick=randomFill;
+$('start').onclick=()=>{if(cells.some(c=>c.v==='')){$('cardError').textContent='⚠️ すべてのマスに数字を入力してな！';return}history=[];renderGame();show('gameScreen')};
+function renderGame(){const g=$('gameCard');g.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;g.innerHTML='';cells.forEach((c,i)=>{const d=document.createElement('div');d.className='cell'+(c.open?' open':'');const x=document.createElement('input');x.value=c.v;x.disabled=true;d.appendChild(x);g.appendChild(d)});status();historyRender()}
+function lines(){const a=[];for(let r=0;r<n;r++)a.push(Array.from({length:n},(_,c)=>r*n+c));for(let c=0;c<n;c++)a.push(Array.from({length:n},(_,r)=>r*n+c));a.push(Array.from({length:n},(_,i)=>i*n+i));a.push(Array.from({length:n},(_,i)=>i*n+n-1-i));return a}
+function status(){let best=n;for(const l of lines())best=Math.min(best,l.filter(i=>!cells[i].open).length);const win=lines().some(l=>l.every(i=>cells[i].open));$('status').textContent=win?'🎉🎉🎉 B I N G O ！！ 🎉🎉🎉':`🔥 BINGOまであと ${best===n?'--':best} マス！`;if(win)$('flash').classList.add('show')}
+function anim(i,cl){const d=$('gameCard').children[i];if(!d)return;d.classList.remove(cl);void d.offsetWidth;d.classList.add(cl);setTimeout(()=>d.classList.remove(cl),650)}
+function historyRender(){$('history').innerHTML=history.length?history.map(x=>`<span class="chip ${x.hit?'hit':''}">${x.score}${x.hit?' 🎯':''}</span>`).join(''):'<span class="mini">まだありません</span>'}
+
+
+window.closePartyFx=function(id){
+ const el=document.getElementById(id);
+ if(!el)return false;
+ el.classList.remove('show');
+ el.style.display='none';
+ el.querySelectorAll('.conf,.sadDrop').forEach(x=>x.remove());
+ return false;
+};
+function playFx(id, reachCount, sadText){
+ const el=$(id);
+ if(!el)return;
+ el.classList.toggle('bingoMode',id==='bingoFx');
+ el.classList.toggle('sadMode',id==='sadFx');
+
+ if(id==='reachFx' && $('reachTitle')){
+   const t=$('reachTitle'),s=$('reachSub');
+   t.style.fontSize='';
+   if(reachCount>=3){t.textContent='🔥 トリプルリーチ！！ 🔥';s.textContent='3ラインがあと1マス！！';t.style.fontSize='clamp(34px,10vw,68px)';}
+   else if(reachCount===2){t.textContent='🔥 ダブルリーチ！！ 🔥';s.textContent='2ラインがあと1マス！！';t.style.fontSize='clamp(38px,11vw,74px)';}
+   else {t.textContent='🔥 リーチ！！ 🔥';s.textContent='あと1マス！！';}
+ }
+
+ if(id==='sadFx' && $('sadTitle')){
+   $('sadTitle').textContent='😭 ザンネン……';
+   $('sadSub').textContent=sadText || 'でも、まだリーチがある！！';
+ }
+
+ el.style.display='flex';
+ el.classList.add('show');
+
+ // IMPORTANT: confetti is ONLY for successful/positive effects.
+ if(id==='reachFx' || id==='bingoFx'){
+   for(let i=0;i<34;i++){
+     const c=document.createElement('i');
+     c.className='conf';
+     c.style.left=(Math.random()*100)+'%';
+     c.style.animationDuration=(1.7+Math.random()*2.3)+'s';
+     c.style.animationDelay=(Math.random()*.35)+'s';
+     c.style.background=['#ffd43b','#ff4fa3','#4bc9ff','#fff'][i%4];
+     c.style.transform='rotate('+Math.random()*180+'deg)';
+     el.appendChild(c);
+     setTimeout(()=>c.remove(),4500);
+   }
+ }
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-close-fx]');
+ if(b){e.preventDefault();e.stopPropagation();closeFx(b.dataset.closeFx);}
+});
+
+$('form').onsubmit=e=>{
+ e.preventDefault();
+ const raw=$('score').value.trim(),s=Number(raw);
+ if(raw===''||!Number.isFinite(s)||s<0||s>999){$('msg').textContent='⚠️ 0〜999で入力してください';return}
+ document.querySelector('.score').textContent=s+'点';
+ const beforeReachCount=lines().filter(l=>l.filter(i=>!cells[i].open).length===1).length;
+ const matches=cells.map((c,i)=>String(c.v)===String(s)?i:-1).filter(i=>i>=0);
+ let hit=false,opened=[];
+ if(dup==='yes'){
+   const unopened=matches.filter(i=>!cells[i].open);
+   if(unopened.length){
+     const i=unopened[Math.floor(Math.random()*unopened.length)];
+     cells[i].open=true;hit=true;anim(i,'hit');
+     $('msg').textContent=`🎯 ${s}点 HIT！！ ランダムで1マスOPEN！`;
+   }else{
+     $('msg').textContent=matches.length?`🔄 ${s}点は全部OPEN済み！今回は変化なし！`:`😢 ${s}点はカードにない！`;
+   }
+ }else{
+   opened=matches.filter(i=>cells[i].open);
+   if(opened.length){
+     opened.forEach(i=>{cells[i].open=false;anim(i,'shake')});
+     $('msg').textContent=`😭 ${s}点がもう一度出た！ ザンネン……`;
+   }else if(matches.length){
+     matches.forEach(i=>{cells[i].open=true;anim(i,'hit')});
+     hit=true;$('msg').textContent=`🎯 ${s}点 HIT！！ OPEN！`;
+   }else{
+     $('msg').textContent=`😢 ${s}点はカードにない！`;
+   }
+ }
+ history.unshift({score:s,hit});
+ $('score').value='';
+ renderGame();
+
+ const winNow=lines().some(l=>l.every(i=>cells[i].open));
+ const reachCount=!winNow ? lines().filter(l=>l.filter(i=>!cells[i].open).length===1).length : 0;
+
+ if(winNow){
+   $('msg').textContent='🎉🎉🎉 B I N G O ！！ 🎉🎉🎉';
+   setTimeout(()=>playFx('bingoFx'),120);
+ }else if(dup==='no' && opened.length && reachCount<beforeReachCount){
+   let remainText=reachCount>=3?'まだトリプルリーチ！！':reachCount===2?'まだダブルリーチ！！':reachCount===1?'まだリーチ！！':'リーチ消滅……';
+   $('msg').textContent='😭 ザンネン…… '+remainText;
+   setTimeout(()=>playFx('sadFx',0,remainText),120);
+ }else if(reachCount>=3){
+   $('msg').textContent='🔥🔥🔥 トリプルリーチ！！ あと1マス！！ 🔥🔥🔥';
+   setTimeout(()=>playFx('reachFx',reachCount),120);
+ }else if(reachCount===2){
+   $('msg').textContent='🔥🔥 ダブルリーチ！！ あと1マス！！ 🔥🔥';
+   setTimeout(()=>playFx('reachFx',reachCount),120);
+ }else if(reachCount===1){
+   $('msg').textContent='🔥 リーチ！！ あと1マス！！ 🔥';
+   setTimeout(()=>playFx('reachFx',reachCount),120);
+ }
+}
+$('gameBack').onclick=()=>{if(confirm('ゲームを終了して設定画面に戻りますか？'))show('setup')};
+$('closeFlash').onclick=()=>$('flash').classList.remove('show');
+})();
+</script>
+</body></html>
